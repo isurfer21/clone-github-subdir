@@ -9,18 +9,29 @@ use std::io::{copy, BufWriter};
 use std::path::Path;
 use url::Url;
 
-fn main() {
-    let url_str = match env::args().nth(1) {
-        Some(url) => url,
-        None => {
-            println!("Please provide a URL as an argument");
-            return;
-        }
-    };
+fn print_help() {
+    println!("Usage:");
+    println!(" cgs [options] <link>");
+    println!("");
+    println!("Arguments:");
+    println!(" link              Github sub-directory URL");
+    println!("");
+    println!("Options:");
+    println!(" -h, --help         Show this help message");
+    println!(" -v, --version      Show the program version");
+    println!(" -u, --url <link>   Github sub-directory URL");
+}
 
-    let url = Url::parse(&url_str)
+fn print_version() {
+    println!("Clone Github Sub-directory (cgs)");
+    println!("Version 1.0.0");
+    println!("Copyright (c) 2023 Abhishek Kumar licensed under MIT License.");
+}
+
+fn clone_subdir(url: &str) {
+    let url_obj = Url::parse(&url)
         .expect("Invalid URL");
-    let path_segments = url.path_segments()
+    let path_segments = url_obj.path_segments()
         .expect("Cannot split the URL path");
     let account = path_segments.clone().nth(0)
         .expect("No account in the URL path");
@@ -103,4 +114,53 @@ fn download_file(url: &str, path: &str) {
     
     writer.flush().expect("Failed to flush writer");
     println!(" {}", file_path);
+}
+
+// Define the main function
+fn main() {
+    // Get the command line arguments as a vector of strings
+    let args: Vec<String> = env::args().collect();
+
+    // Check if there are any arguments
+    if args.len() > 1 {
+        // Get the first argument as the option
+        let option = &args[1];
+
+        // Match the option with different cases
+        match option.as_str() {
+            // If the option is -h or --help, call the print_help function
+            "-h" | "--help" => print_help(),
+            // If the option is -v or --version, call the print_version function
+            "-v" | "--version" => print_version(),
+            // If the option is -u or --url, check if there are 1 more argument as string
+            "-u" | "--url" => {
+                // Check if there are at least 3 arguments in total
+                if args.len() >= 3 {
+                    let url_str = match env::args().nth(2) {
+                        Some(url) => url,
+                        None => {
+                            println!("Please provide a URL as an argument");
+                            return;
+                        }
+                    };
+                    clone_subdir(&url_str);
+                } else {
+                    println!("Missing numbers for arguments");
+                }
+            }
+            // If the option is anything else, print an error message
+            _ => {
+                let url_str = match env::args().nth(1) {
+                    Some(url) => url,
+                    None => {
+                        println!("Please provide a URL as an argument");
+                        return;
+                    }
+                };
+                clone_subdir(&url_str);
+            }
+        }
+    } else {
+        println!("No options or arguments provided");
+    }
 }

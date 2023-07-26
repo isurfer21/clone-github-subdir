@@ -116,25 +116,16 @@ fn download_file(url: &str, path: &str) {
     println!(" {}", file_path);
 }
 
-// Define the main function
 fn main() {
-    // Get the command line arguments as a vector of strings
     let args: Vec<String> = env::args().collect();
 
-    // Check if there are any arguments
     if args.len() > 1 {
-        // Get the first argument as the option
         let option = &args[1];
 
-        // Match the option with different cases
         match option.as_str() {
-            // If the option is -h or --help, call the print_help function
             "-h" | "--help" => print_help(),
-            // If the option is -v or --version, call the print_version function
             "-v" | "--version" => print_version(),
-            // If the option is -u or --url, check if there are 1 more argument as string
             "-u" | "--url" => {
-                // Check if there are at least 3 arguments in total
                 if args.len() >= 3 {
                     let url_str = match env::args().nth(2) {
                         Some(url) => url,
@@ -148,7 +139,6 @@ fn main() {
                     println!("Missing numbers for arguments");
                 }
             }
-            // If the option is anything else, print an error message
             _ => {
                 let url_str = match env::args().nth(1) {
                     Some(url) => url,

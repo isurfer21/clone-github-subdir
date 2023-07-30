@@ -1,8 +1,15 @@
 [package]
 name = "clone-github-subdir"
 version = "0.1.0"
-authors = ["Abhishek Kumar"]
+authors = ["Abhishek Kumar <akbittu@gmail.com>"]
 edition = "2021"
+license = "MIT License"
+description = "Clone any sub-directory of a Github repository to your local machine."
+readme = "README.md"
+homepage = "https://github.com/isurfer21/clone-github-subdir"
+repository = "https://github.com/isurfer21/clone-github-subdir.git"
+keywords = ["cli", "dir", "clone", "git", "tool"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 regex = "1.9.1"

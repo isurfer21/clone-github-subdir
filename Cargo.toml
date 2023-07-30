@@ -5,6 +5,11 @@ authors = ["Abhishek Kumar"]
 edition = "2021"
 
 [dependencies]
+regex = "1.9.1"
 reqwest = { version = "0.11.18", features = ["blocking"] }
 serde_json = "1.0.103"
 url = "2.4.0"
+
+[[bin]]
+name = "cgs"
+path = "src/main.rs"

@@ -22,7 +22,6 @@ fn print_help() {
     println!("Options:");
     println!(" -h, --help         Show this help message");
     println!(" -v, --version      Show the program version");
-    println!(" -u, --url <link>   Github sub-directory URL");
     println!(" -c, --curdir       Current sub-directory only");
 }
 
@@ -32,76 +31,52 @@ fn print_version() {
     println!("Copyright (c) 2023 Abhishek Kumar licensed under MIT License.");
 }
 
-// Define a function that returns a tuple of a hashmap of flags and values and an array of non-flag arguments
 fn parse_args() -> (HashMap<String, String>, Vec<String>) {
-    // Create a hashmap to store the flags and values
     let mut flags = HashMap::new();
-    // Create an array to store the non-flag arguments
     let mut args = Vec::new();
-    // Create regular expressions to match different kinds of flags
     let flag_with_value = Regex::new(r"^[\-\-]{1,2}.+[\=\:].*$").unwrap();
     let flag_without_value = Regex::new(r"^[\-\-]{1,2}.+$").unwrap();
 
-    // Iterate over the command-line arguments, skipping the first two
     for arg in env::args() {
         match arg.as_str() {
-            // If the argument matches a flag with a value, split it and insert it into the hashmap
             s if flag_with_value.is_match(s) => {
                 let parts = s.splitn(2, |c| c == '=' || c == ':').collect::<Vec<&str>>();
                 let key = parts[0].trim_start_matches('-');
                 let value = parts[1];
                 flags.insert(key.to_string(), value.to_string());
             }
-            // If the argument matches a flag without a value, insert it into the hashmap with a true value
             s if flag_without_value.is_match(s) => {
                 let key = s.trim_start_matches('-');
                 flags.insert(key.to_string(), true.to_string());
             }
-            // Otherwise, push the argument into the array
             s => {
                 args.push(s.to_string());
             }
         }
     }
 
-    // Return the tuple of hashmap and array
     (flags, args)
 }
 
-// Define a function that takes a file path and a directory name as arguments and returns a String
 fn strip_dir_path(dir_path: &str, dir_name: &str) -> String {
-    // Create a path from the file path
     let path = Path::new(dir_path);
-
-    // Split the path into segments
     let path_segments = path.iter();
 
-    // Create a new path segment
     let mut stripped_path_segments = PathBuf::new();
-
-    // A flag to indicate if the directory name is found
     let mut found = false;
 
-    // Loop over the segments until the directory name is found or the iterator is exhausted
     for segment in path_segments {
-        // Check if the segment matches the directory name
         if segment == dir_name {
-            // Set the flag to true
             found = true;
         }
-        // If the flag is true, append the segment to the new path segment
         if found {
             stripped_path_segments.push(segment);
         }
     }
 
-    // Collect the remaining segments into a PathBuf
     let stripped_path: PathBuf = stripped_path_segments.iter().collect();
-
-    // Convert the stripped path to a string
     let stripped_path_string = stripped_path.to_string_lossy();
 
-    // Return the stripped path string
     stripped_path_string.into_owned()
 }
 
@@ -166,12 +141,11 @@ fn list_content(url: &str, dir: &str, opt: &mut HashMap<&str, bool>) -> Result<(
                     .expect("Invalid filepath in the sub-directory");
                 
                 if opt["curdir"] {
-                    // Get the parent directory of the file path
                     let file_dir_path = Path::new(file_path)
                         .parent()
                         .as_ref()
                         .and_then(|p| p.to_str())
-                        .unwrap_or("Invalid directory path extracted from sub-file path");
+                        .unwrap_or("Invalid directory path of the sub-file");
 
                     let file_dir = &strip_dir_path(file_dir_path, dir);
                     
@@ -182,9 +156,9 @@ fn list_content(url: &str, dir: &str, opt: &mut HashMap<&str, bool>) -> Result<(
                 } else {
                     let file_dir = Path::new(file_path)
                         .parent()
-                        .expect("Invalid directory path of the file")
-                        .to_str()
-                        .expect("Unable to convert directory path to string");
+                        .as_ref()
+                        .and_then(|p| p.to_str())
+                        .unwrap_or("Invalid directory path of the file");
                     
                     let file_url = element["download_url"].as_str()
                         .expect("Invalid download file URL");
@@ -205,22 +179,19 @@ fn download_file(url: &str, path: &str) {
 
     fs::create_dir_all(path).expect("Failed to create directory");
     
-    let file_path = format!("{}/{}", path, file_name);
-    let file = File::create(&file_path).expect("Failed to create file");
+    let file_path: PathBuf = Path::new(path).join(file_name).iter().collect();
+    let file = File::create(file_path.clone()).expect("Failed to create file");
     let mut writer = BufWriter::new(file);
     
     copy(&mut response.bytes().expect("Failed to get bytes").as_ref(), &mut writer)
         .expect("Failed to copy data");
     
     writer.flush().expect("Failed to flush writer");
-    println!(" {}", file_path);
+    println!(" {}", file_path.display());
 }
 
 fn main() {
     let (flags, args) = parse_args();
-
-    println!("{:?}", flags);
-    println!("{:?} {}", args, args.len());
 
     if flags.contains_key("help") || flags.contains_key("h") {
         print_help();

@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process;
 use url::Url;
 use regex::Regex;
+use base64::{Engine as _, engine::general_purpose};
 
 fn print_help() {
     println!("Usage:");
@@ -167,6 +168,22 @@ fn list_content(url: &str, dir: &str, opt: &mut HashMap<&str, bool>) -> Result<(
                 }
             }
         }
+    } else if let Some(object) = item_list.as_object() {        
+        let file_type = object["type"].as_str()
+            .expect("No file type in the response");
+        if file_type == "file"{
+            let file_encoding = object["encoding"].as_str()
+                .expect("No file encoding scheme provided in response");
+            if file_encoding == "base64" {
+                let file_name = object["name"].as_str().unwrap();
+                let file_content = object["content"].as_str().unwrap().replace("\n", "");
+                let bytes = &general_purpose::STANDARD.decode(file_content).unwrap();
+                fs::write(file_name, &bytes).unwrap();
+                println!(" {}", file_name);
+            }
+        }
+    } else {
+        println!("Invalid response from GitHub API");
     }
 
     Ok(())
